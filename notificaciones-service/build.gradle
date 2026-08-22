@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'org.sonarqube' version '5.1.0.4882'
 }
 
 group = 'com.brandonisla'
@@ -35,4 +36,14 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// Análisis de calidad en SonarCloud (el token llega por entorno).
+sonar {
+    properties {
+        property 'sonar.host.url', 'https://sonarcloud.io'
+        property 'sonar.organization', 'branjame45'
+        property 'sonar.projectKey', 'comercios-microservices-notificaciones-service'
+        property 'sonar.projectName', 'notificaciones-service'
+    }
 }

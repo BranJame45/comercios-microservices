@@ -1,5 +1,8 @@
 # comercios-microservices
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/quality_gate?project=comercios-microservices-comercios-service)](https://sonarcloud.io/summary/new_code?id=comercios-microservices-comercios-service)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/quality_gate?project=comercios-microservices-notificaciones-service)](https://sonarcloud.io/summary/new_code?id=comercios-microservices-notificaciones-service)
+
 Sistema de microservicios para la afiliación de comercios. Parte de un
 microservicio base (`comercios-service`) que gestiona la afiliación de
 comercios y evoluciona hacia una arquitectura de microservicios con:
@@ -106,11 +109,47 @@ curl http://localhost:8081/api/v1/notificaciones
   GET /api/v1/comercios?estado=APROBADO&page=0&size=20
   ```
 
+## Calidad con SonarCloud
+
+Cada push a `main` dispara un workflow de GitHub Actions que compila, prueba y
+analiza ambos servicios en SonarCloud (`.github/workflows/calidad.yml`).
+
+Configuración usada:
+
+| Servicio | Clave de proyecto |
+|----------|-------------------|
+| comercios-service | `comercios-microservices-comercios-service` |
+| notificaciones-service | `comercios-microservices-notificaciones-service` |
+
+Organización de SonarCloud: `branjame45`.
+
+Pasos para activarlo por primera vez (se hace una sola vez, desde la cuenta):
+
+1. Ingresar a <https://sonarcloud.io> con la cuenta de GitHub (`BranJame45`).
+2. Importar la organización (si aún no existe) y crear los dos proyectos
+   apuntando al repositorio `comercios-microservices`, con las claves de la
+   tabla anterior.
+3. Generar un token en *My Account → Security* y guardarlo como secret del
+   repositorio con el nombre `SONAR_TOKEN`.
+
+Los badges de quality gate al inicio de este README se activan con el primer
+análisis.
+
+## Contenedores
+
+Cada servicio tiene su `Dockerfile` multi-stage (build con Maven/Gradle +
+JDK 21, runtime con JRE 21):
+
+```bash
+docker build -t comercios-service:1.0.0 comercios-service
+docker build -t notificaciones-service:1.0.0 notificaciones-service
+```
+
 ## Estado del avance
 
 - [x] Fase 1: monorepo de microservicios + docker-compose local
 - [x] Fase 2: PostgreSQL avanzado (bloqueo optimista, paginación)
 - [x] Fase 3: notificaciones-service con Gradle + RabbitMQ
-- [ ] Fase 4: SonarCloud + Dockerfiles multi-stage
+- [x] Fase 4: SonarCloud + Dockerfiles multi-stage
 - [ ] Fase 5: despliegue en Kubernetes local (kind)
 - [ ] Fase 6: documentación final y espejo en Bitbucket
