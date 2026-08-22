@@ -42,7 +42,7 @@ tasks.named('test') {
 sonar {
     properties {
         property 'sonar.host.url', 'https://sonarcloud.io'
-        property 'sonar.organization', 'branjame45'
+        property 'sonar.organization', 'brandon-isla'
         property 'sonar.projectKey', 'comercios-microservices-notificaciones-service'
         property 'sonar.projectName', 'notificaciones-service'
     }

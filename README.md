@@ -280,25 +280,6 @@ clúster usando `port-forward`: aprobar un comercio generó su notificación en
 | `05-comercios-service.yaml` | Deployment (con initContainer que espera a Postgres), Service y HPA (2→6 réplicas al 70% CPU) |
 | `06-notificaciones-service.yaml` | Deployment y Service |
 
-## Espejo en Bitbucket
-
-Este repositorio tiene su origen en GitHub y se espeja en Bitbucket como
-respaldo:
-
-```bash
-# 1. Crear en Bitbucket un repositorio vacío llamado "comercios-microservices"
-#    (sin README ni .gitignore iniciales)
-
-# 2. Apuntar el remoto secundario a tu cuenta (reemplaza TU_WORKSPACE)
-git remote set-url bitbucket https://bitbucket.org/TU_WORKSPACE/comercios-microservices.git
-
-# 3. Enviar todo lo publicado en GitHub
-git push bitbucket main
-```
-
-El remoto `bitbucket` ya está declarado en este repositorio; solo falta
-reemplazar `TU_WORKSPACE` por la cuenta real de Bitbucket.
-
 ## Estado del avance
 
 - [x] Fase 1: monorepo de microservicios + docker-compose local
@@ -306,9 +287,8 @@ reemplazar `TU_WORKSPACE` por la cuenta real de Bitbucket.
 - [x] Fase 3: notificaciones-service con Gradle + RabbitMQ
 - [x] Fase 4: SonarCloud + Dockerfiles multi-stage
 - [x] Fase 5: despliegue en Kubernetes local (kind)
-- [x] Fase 6: documentación final y espejo en Bitbucket
+- [x] Fase 6: documentación final
 
-> Pendiente del lado del autor (requiere cuentas propias): crear los proyectos
-> en SonarCloud y el secret `SONAR_TOKEN` para activar el análisis, y crear la
-> cuenta de Bitbucket para completar el espejo. Los pasos están documentados
-> arriba en cada sección.
+> Nota: el análisis de SonarCloud se ejecuta automáticamente en cada push a
+> través de GitHub Actions, usando el secret `SONAR_TOKEN` configurado en el
+> repositorio.
