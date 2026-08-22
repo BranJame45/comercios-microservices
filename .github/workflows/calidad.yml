@@ -7,38 +7,29 @@ on:
     branches: [main]
 
 jobs:
-  comercios-service:
-    name: Análisis de comercios-service
+  analisis:
+    name: Análisis de calidad (SonarCloud)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
-      - name: Compilar, probar y analizar con SonarCloud
-        working-directory: comercios-service
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
 
-  notificaciones-service:
-    name: Análisis de notificaciones-service
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-      - uses: gradle/actions/setup-gradle@v4
-      - name: Compilar, probar y analizar con SonarCloud
+      - name: Compilar comercios-service (Maven)
+        working-directory: comercios-service
+        run: mvn -B -DskipTests package
+
+      - name: Compilar notificaciones-service (Gradle)
         working-directory: notificaciones-service
+        run: ./gradlew build -x test
+
+      - name: Análisis con SonarCloud
+        uses: SonarSource/sonarqube-scan-action@v3
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew build sonar

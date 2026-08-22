@@ -1,7 +1,6 @@
 # comercios-microservices
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/quality_gate?project=comercios-microservices-comercios-service)](https://sonarcloud.io/summary/new_code?id=comercios-microservices-comercios-service)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/quality_gate?project=comercios-microservices-notificaciones-service)](https://sonarcloud.io/summary/new_code?id=comercios-microservices-notificaciones-service)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/quality_gate?project=comercios-microservices)](https://sonarcloud.io/summary/new_code?id=comercios-microservices)
 
 Sistema de microservicios para la afiliación de comercios. Parte de un
 microservicio base (`comercios-service`) que gestiona la afiliación de
