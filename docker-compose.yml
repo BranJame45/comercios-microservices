@@ -6,8 +6,10 @@ services:
       POSTGRES_USER: comercios
       POSTGRES_PASSWORD: comercios
       POSTGRES_DB: comercios
+    # El host usa 5434 para no chocar con los PostgreSQL instalados en la
+    # propia máquina (conflicto típico en Windows).
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-bd.sql:/docker-entrypoint-initdb.d/init-bd.sql:ro

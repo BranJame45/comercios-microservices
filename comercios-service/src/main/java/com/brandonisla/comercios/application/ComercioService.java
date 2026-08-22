@@ -4,8 +4,11 @@ import com.brandonisla.comercios.domain.model.Comercio;
 import com.brandonisla.comercios.domain.model.EstadoAfiliacion;
 import com.brandonisla.comercios.domain.model.Pagina;
 import com.brandonisla.comercios.domain.port.ComercioRepository;
+import com.brandonisla.comercios.domain.port.PublicadorEventos;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,9 +21,11 @@ import java.util.UUID;
 public class ComercioService {
 
     private final ComercioRepository repositorio;
+    private final PublicadorEventos publicadorEventos;
 
-    public ComercioService(ComercioRepository repositorio) {
+    public ComercioService(ComercioRepository repositorio, PublicadorEventos publicadorEventos) {
         this.repositorio = repositorio;
+        this.publicadorEventos = publicadorEventos;
     }
 
     public Comercio afiliar(String ruc, String razonSocial, String nombreComercial, String rubro) {
@@ -54,7 +59,28 @@ public class ComercioService {
     public Comercio cambiarEstado(UUID id, EstadoAfiliacion nuevoEstado) {
         Comercio comercio = obtener(id);
         comercio.cambiarEstado(nuevoEstado); // regla de negocio vive en el dominio
-        return repositorio.guardar(comercio);
+        Comercio guardado = repositorio.guardar(comercio);
+        if (nuevoEstado == EstadoAfiliacion.APROBADO) {
+            publicarAprobacionTrasCommit(guardado);
+        }
+        return guardado;
+    }
+
+    /**
+     * El evento sale solo si la transacción confirma; así nunca se notifica
+     * una aprobación que terminó en rollback.
+     */
+    private void publicarAprobacionTrasCommit(Comercio aprobado) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    publicadorEventos.publicarComercioAprobado(aprobado);
+                }
+            });
+        } else {
+            publicadorEventos.publicarComercioAprobado(aprobado);
+        }
     }
 
     public void eliminar(UUID id) {

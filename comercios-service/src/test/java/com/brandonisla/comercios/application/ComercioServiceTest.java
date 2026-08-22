@@ -3,6 +3,7 @@ package com.brandonisla.comercios.application;
 import com.brandonisla.comercios.domain.model.Comercio;
 import com.brandonisla.comercios.domain.model.EstadoAfiliacion;
 import com.brandonisla.comercios.domain.port.ComercioRepository;
+import com.brandonisla.comercios.domain.port.PublicadorEventos;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,6 +26,9 @@ class ComercioServiceTest {
 
     @Mock
     private ComercioRepository repositorio;
+
+    @Mock
+    private PublicadorEventos publicadorEventos;
 
     @InjectMocks
     private ComercioService servicio;
@@ -63,7 +67,7 @@ class ComercioServiceTest {
     }
 
     @Test
-    void cambiarEstado_aprobado_actualiza() {
+    void cambiarEstado_aprobado_actualizaYPublicaEvento() {
         UUID id = UUID.randomUUID();
         Comercio existente = Comercio.nuevo("20123456789", "Empresa", "Empresa", "Retail");
         existente.setId(id);
@@ -73,6 +77,21 @@ class ComercioServiceTest {
         Comercio actualizado = servicio.cambiarEstado(id, EstadoAfiliacion.APROBADO);
 
         assertThat(actualizado.getEstado()).isEqualTo(EstadoAfiliacion.APROBADO);
+        verify(publicadorEventos).publicarComercioAprobado(actualizado);
+    }
+
+    @Test
+    void cambiarEstado_suspendido_noPublicaEvento() {
+        UUID id = UUID.randomUUID();
+        Comercio existente = Comercio.nuevo("20123456789", "Empresa", "Empresa", "Retail");
+        existente.setId(id);
+        when(repositorio.buscarPorId(id)).thenReturn(Optional.of(existente));
+        when(repositorio.guardar(any(Comercio.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Comercio actualizado = servicio.cambiarEstado(id, EstadoAfiliacion.SUSPENDIDO);
+
+        assertThat(actualizado.getEstado()).isEqualTo(EstadoAfiliacion.SUSPENDIDO);
+        verify(publicadorEventos, never()).publicarComercioAprobado(any());
     }
 
     @Test
