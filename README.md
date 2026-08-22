@@ -17,13 +17,73 @@ Flujo principal: al aprobar un comercio, `comercios-service` publica el evento
 `ComercioAprobado` en RabbitMQ; `notificaciones-service` lo consume y guarda la
 notificación en su propia base de datos.
 
+## Arquitectura
+
+```
+                   ┌──────────────────────┐
+   Cliente  ──►    │  comercios-service   │  (Maven)  Postgres: comercios
+                   │  (afiliación CRUD)   │
+                   └───────────┬──────────┘
+                               │  publica evento "ComercioAprobado"
+                               ▼  (RabbitMQ)
+                   ┌──────────────────────┐
+                   │ notificaciones-service│ (Gradle) Postgres: notificaciones
+                   │ (consume eventos,     │
+                   │  registra notif.)     │
+                   └──────────────────────┘
+   Todo desplegable en Kubernetes local (kind) con los manifiestos de k8s/.
+```
+
+Ambos servicios siguen **arquitectura hexagonal** (`domain` / `application` /
+`infrastructure`) y el patrón **database-per-service**.
+
+## Stack
+
+| Componente | Versión / herramienta |
+|------------|----------------------|
+| Java | 21 |
+| Spring Boot | 3.3.x |
+| comercios-service | Maven |
+| notificaciones-service | Gradle |
+| PostgreSQL | 16 (compose) · 15+ compatible |
+| RabbitMQ | 3.x con management |
+| Kubernetes local | kind |
+| Calidad de código | SonarCloud + GitHub Actions |
+| Pruebas | JUnit 5 + Mockito (patrón AAA) |
+
+## Endpoints principales
+
+**comercios-service** (puerto 8080, requiere JWT):
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/v1/auth/login` | Emite token JWT (admin demo) |
+| POST | `/api/v1/comercios` | Afiliar comercio (nace PENDIENTE) |
+| GET | `/api/v1/comercios?estado=&page=&size=` | Listar con filtro y paginación |
+| GET | `/api/v1/comercios/{id}` | Obtener un comercio |
+| PATCH | `/api/v1/comercios/{id}/estado` | Cambiar estado (dispara evento al aprobar) |
+| DELETE | `/api/v1/comercios/{id}` | Eliminar comercio |
+
+**notificaciones-service** (puerto 8081, sin autenticación):
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/notificaciones` | Lista las notificaciones generadas |
+
+## Credenciales demo
+
+| Uso | Usuario | Contraseña |
+|-----|---------|------------|
+| Login API (comercios) | `admin` | `Admin2026!` |
+| PostgreSQL / RabbitMQ | `comercios` | `comercios` |
+
 ## Estructura del proyecto
 
 ```
 comercios-microservices/
 ├── comercios-service/        # Microservicio de afiliación (Maven)
 ├── notificaciones-service/   # Microservicio de notificaciones (Gradle)
-├── k8s/                      # Manifiestos de Kubernetes - Fase 5
+├── k8s/                      # Manifiestos de Kubernetes
 ├── scripts/                  # Scripts de apoyo (init de bases de datos)
 └── docker-compose.yml        # Infraestructura local: Postgres + RabbitMQ
 ```
@@ -220,6 +280,25 @@ clúster usando `port-forward`: aprobar un comercio generó su notificación en
 | `05-comercios-service.yaml` | Deployment (con initContainer que espera a Postgres), Service y HPA (2→6 réplicas al 70% CPU) |
 | `06-notificaciones-service.yaml` | Deployment y Service |
 
+## Espejo en Bitbucket
+
+Este repositorio tiene su origen en GitHub y se espeja en Bitbucket como
+respaldo:
+
+```bash
+# 1. Crear en Bitbucket un repositorio vacío llamado "comercios-microservices"
+#    (sin README ni .gitignore iniciales)
+
+# 2. Apuntar el remoto secundario a tu cuenta (reemplaza TU_WORKSPACE)
+git remote set-url bitbucket https://bitbucket.org/TU_WORKSPACE/comercios-microservices.git
+
+# 3. Enviar todo lo publicado en GitHub
+git push bitbucket main
+```
+
+El remoto `bitbucket` ya está declarado en este repositorio; solo falta
+reemplazar `TU_WORKSPACE` por la cuenta real de Bitbucket.
+
 ## Estado del avance
 
 - [x] Fase 1: monorepo de microservicios + docker-compose local
@@ -227,4 +306,9 @@ clúster usando `port-forward`: aprobar un comercio generó su notificación en
 - [x] Fase 3: notificaciones-service con Gradle + RabbitMQ
 - [x] Fase 4: SonarCloud + Dockerfiles multi-stage
 - [x] Fase 5: despliegue en Kubernetes local (kind)
-- [ ] Fase 6: documentación final y espejo en Bitbucket
+- [x] Fase 6: documentación final y espejo en Bitbucket
+
+> Pendiente del lado del autor (requiere cuentas propias): crear los proyectos
+> en SonarCloud y el secret `SONAR_TOKEN` para activar el análisis, y crear la
+> cuenta de Bitbucket para completar el espejo. Los pasos están documentados
+> arriba en cada sección.
