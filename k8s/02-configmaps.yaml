@@ -1,0 +1,14 @@
+# Configuración no sensible compartida por los servicios.
+# Dentro del clúster, Postgres escucha en el Service "postgres" (puerto 5432)
+# y RabbitMQ en el Service "rabbitmq" (puerto 5672).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: comercios-config
+  namespace: comercios
+data:
+  postgres-db: "comercios"
+  db-host: "postgres"
+  db-port: "5432"
+  rabbitmq-host: "rabbitmq"
+  rabbitmq-port: "5672"

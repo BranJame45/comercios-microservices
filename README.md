@@ -145,11 +145,86 @@ docker build -t comercios-service:1.0.0 comercios-service
 docker build -t notificaciones-service:1.0.0 notificaciones-service
 ```
 
+## Despliegue en Kubernetes local (kind)
+
+> **Nota de honestidad:** este despliegue corre en un clúster **Kubernetes
+> local con kind** (autogestionado, equivalente conceptual a un entorno
+> on-premise), no en un clúster productivo administrado.
+
+### Pasos
+
+```bash
+# 1. Construir las imágenes (desde la raíz del proyecto)
+docker build -t comercios-service:1.0.0 comercios-service
+docker build -t notificaciones-service:1.0.0 notificaciones-service
+
+# 2. Crear el clúster kind y cargar las imágenes
+kind create cluster --name comercios
+kind load docker-image comercios-service:1.0.0 --name comercios
+kind load docker-image notificaciones-service:1.0.0 --name comercios
+
+# 3. Desplegar todo (namespace, secret, configmaps, postgres, rabbitmq,
+#    microservicios y HPA)
+kubectl apply -f k8s/
+
+# 4. (Opcional pero recomendado) metrics-server para que el HPA lea CPU real.
+#    kind no lo incluye; en kind además se necesita --kubelet-insecure-tls:
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+kubectl -n kube-system patch deploy metrics-server \
+  --patch-file k8s/patch-metrics-server.json
+
+# 5. Verificar
+kubectl get pods -n comercios
+kubectl get svc -n comercios
+kubectl get hpa -n comercios
+
+# 6. Probar los servicios desde tu máquina
+kubectl port-forward svc/comercios-service 8090:8080 -n comercios
+kubectl port-forward svc/notificaciones-service 8091:8081 -n comercios
+kubectl port-forward svc/rabbitmq 15672:15672 -n comercios   # panel RabbitMQ
+```
+
+### Evidencia del despliegue
+
+Salida de `kubectl get pods -n comercios` en el clúster local:
+
+```
+NAME                                      READY   STATUS    RESTARTS   AGE
+comercios-service-6f886dff4c-n8gxr        1/1     Running   0          4m43s
+comercios-service-6f886dff4c-rwwz4        1/1     Running   0          3m43s
+notificaciones-service-59f7df99fb-rgrb4   1/1     Running   0          4m43s
+postgres-9cdc45799-g4wcg                  1/1     Running   0          9m40s
+rabbitmq-65ff8fd688-9rt9l                 1/1     Running   0          44s
+```
+
+Salida de `kubectl get hpa -n comercios` (con metrics-server instalado):
+
+```
+NAME                REFERENCE                      TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+comercios-service   Deployment/comercios-service   cpu: 2%/70%   2         6         2          14m
+```
+
+El flujo completo (afiliar → aprobar → notificación) se verificó dentro del
+clúster usando `port-forward`: aprobar un comercio generó su notificación en
+`notificaciones-service`.
+
+### Qué incluye cada manifiesto (`k8s/`)
+
+| Archivo | Contenido |
+|---------|-----------|
+| `00-namespace.yaml` | Namespace `comercios` |
+| `01-secrets.yaml` | Secret con credenciales demo (BD, JWT, admin) |
+| `02-configmaps.yaml` | Configuración no sensible (hosts/puertos internos) |
+| `03-postgres.yaml` | ConfigMap init (crea BD `notificaciones`), PVC, Deployment y Service |
+| `04-rabbitmq.yaml` | Deployment y Service (AMQP + panel de administración) |
+| `05-comercios-service.yaml` | Deployment (con initContainer que espera a Postgres), Service y HPA (2→6 réplicas al 70% CPU) |
+| `06-notificaciones-service.yaml` | Deployment y Service |
+
 ## Estado del avance
 
 - [x] Fase 1: monorepo de microservicios + docker-compose local
 - [x] Fase 2: PostgreSQL avanzado (bloqueo optimista, paginación)
 - [x] Fase 3: notificaciones-service con Gradle + RabbitMQ
 - [x] Fase 4: SonarCloud + Dockerfiles multi-stage
-- [ ] Fase 5: despliegue en Kubernetes local (kind)
+- [x] Fase 5: despliegue en Kubernetes local (kind)
 - [ ] Fase 6: documentación final y espejo en Bitbucket
