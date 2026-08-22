@@ -2,6 +2,7 @@ package com.brandonisla.comercios.infrastructure.web;
 
 import com.brandonisla.comercios.application.ComercioService;
 import com.brandonisla.comercios.domain.model.Comercio;
+import com.brandonisla.comercios.domain.model.EstadoAfiliacion;
 import com.brandonisla.comercios.infrastructure.web.ComercioDtos.CambiarEstadoRequest;
 import com.brandonisla.comercios.infrastructure.web.ComercioDtos.ComercioResponse;
 import com.brandonisla.comercios.infrastructure.web.ComercioDtos.CrearComercioRequest;
@@ -14,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -38,9 +38,12 @@ public class ComercioController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar todos los comercios")
-    public List<ComercioResponse> listar() {
-        return servicio.listar().stream().map(ComercioResponse::desde).toList();
+    @Operation(summary = "Listar comercios con filtro opcional por estado y paginación")
+    public ComercioDtos.PaginaComerciosResponse listar(
+            @RequestParam(required = false) EstadoAfiliacion estado,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ComercioDtos.PaginaComerciosResponse.desde(servicio.listar(estado, page, size));
     }
 
     @GetMapping("/{id}")

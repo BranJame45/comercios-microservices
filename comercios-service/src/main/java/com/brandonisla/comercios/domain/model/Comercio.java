@@ -17,12 +17,14 @@ public class Comercio {
     private EstadoAfiliacion estado;
     private Instant creadoEn;
     private Instant actualizadoEn;
+    private Long version;
 
     public Comercio() {
     }
 
     public Comercio(UUID id, String ruc, String razonSocial, String nombreComercial,
-                    String rubro, EstadoAfiliacion estado, Instant creadoEn, Instant actualizadoEn) {
+                    String rubro, EstadoAfiliacion estado, Instant creadoEn, Instant actualizadoEn,
+                    Long version) {
         this.id = id;
         this.ruc = ruc;
         this.razonSocial = razonSocial;
@@ -31,13 +33,14 @@ public class Comercio {
         this.estado = estado;
         this.creadoEn = creadoEn;
         this.actualizadoEn = actualizadoEn;
+        this.version = version;
     }
 
-    /** Regla de negocio: un comercio nace en estado PENDIENTE. */
+    /** Regla de negocio: un comercio nace en estado PENDIENTE (sin versión aún). */
     public static Comercio nuevo(String ruc, String razonSocial, String nombreComercial, String rubro) {
         Instant ahora = Instant.now();
         return new Comercio(UUID.randomUUID(), ruc, razonSocial, nombreComercial, rubro,
-                EstadoAfiliacion.PENDIENTE, ahora, ahora);
+                EstadoAfiliacion.PENDIENTE, ahora, ahora, null);
     }
 
     /** Regla de negocio: no se puede cambiar el estado de un comercio rechazado. */
@@ -65,4 +68,6 @@ public class Comercio {
     public void setCreadoEn(Instant creadoEn) { this.creadoEn = creadoEn; }
     public Instant getActualizadoEn() { return actualizadoEn; }
     public void setActualizadoEn(Instant actualizadoEn) { this.actualizadoEn = actualizadoEn; }
+    public Long getVersion() { return version; }
+    public void setVersion(Long version) { this.version = version; }
 }

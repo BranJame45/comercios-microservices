@@ -4,6 +4,7 @@ import com.brandonisla.comercios.application.ComercioNoEncontradoException;
 import com.brandonisla.comercios.application.RucDuplicadoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -33,6 +34,16 @@ public class ManejadorErrores {
     @ExceptionHandler(RucDuplicadoException.class)
     public ResponseEntity<Object> rucDuplicado(RucDuplicadoException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(cuerpo(HttpStatus.CONFLICT, e.getMessage()));
+    }
+
+    /**
+     * Conflicto de bloqueo optimista: otra transacción actualizó el mismo
+     * comercio primero. Se informa al cliente para que recargue y reintente.
+     */
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<Object> conflictoConcurrencia(ObjectOptimisticLockingFailureException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(cuerpo(HttpStatus.CONFLICT,
+                "El comercio fue modificado por otro usuario. Recárgalo e inténtalo de nuevo."));
     }
 
     @ExceptionHandler(IllegalStateException.class)

@@ -6,15 +6,25 @@ import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
-/** Representación JPA del comercio (capa de infraestructura). */
+/**
+ * Representación JPA del comercio (capa de infraestructura).
+ *
+ * El índice único sobre ruc se declara aquí con nombre estable porque las
+ * búsquedas por RUC son la consulta más frecuente (validación de duplicados
+ * al afiliar). PostgreSQL ya crea un índice B-tree para toda restricción
+ * UNIQUE; declararlo explícito documenta el camino de acceso y lo hace
+ * portátil entre gestores.
+ */
 @Entity
-@Table(name = "comercios")
+@Table(name = "comercios",
+        uniqueConstraints = @UniqueConstraint(name = "uq_comercios_ruc", columnNames = "ruc"),
+        indexes = @Index(name = "idx_comercios_ruc", columnList = "ruc", unique = true))
 public class ComercioEntity {
 
     @Id
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 11)
+    @Column(nullable = false, length = 11)
     private String ruc;
 
     @Column(nullable = false)
@@ -29,6 +39,14 @@ public class ComercioEntity {
 
     private Instant creadoEn;
     private Instant actualizadoEn;
+
+    /**
+     * Bloqueo optimista: Hibernate incrementa la versión en cada UPDATE y
+     * la incluye en la cláusula WHERE. Si dos transacciones leen la misma
+     * versión, la segunda recibe OptimisticLockException al confirmar.
+     */
+    @Version
+    private Long version;
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -46,4 +64,6 @@ public class ComercioEntity {
     public void setCreadoEn(Instant creadoEn) { this.creadoEn = creadoEn; }
     public Instant getActualizadoEn() { return actualizadoEn; }
     public void setActualizadoEn(Instant actualizadoEn) { this.actualizadoEn = actualizadoEn; }
+    public Long getVersion() { return version; }
+    public void setVersion(Long version) { this.version = version; }
 }

@@ -1,6 +1,8 @@
 package com.brandonisla.comercios.domain.port;
 
 import com.brandonisla.comercios.domain.model.Comercio;
+import com.brandonisla.comercios.domain.model.EstadoAfiliacion;
+import com.brandonisla.comercios.domain.model.Pagina;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +16,7 @@ public interface ComercioRepository {
     Comercio guardar(Comercio comercio);
     Optional<Comercio> buscarPorId(UUID id);
     List<Comercio> listar();
+    Pagina<Comercio> listar(EstadoAfiliacion estado, int pagina, int tamanio);
     boolean existePorRuc(String ruc);
     void eliminar(UUID id);
 }

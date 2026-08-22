@@ -2,8 +2,10 @@ package com.brandonisla.comercios.application;
 
 import com.brandonisla.comercios.domain.model.Comercio;
 import com.brandonisla.comercios.domain.model.EstadoAfiliacion;
+import com.brandonisla.comercios.domain.model.Pagina;
 import com.brandonisla.comercios.domain.port.ComercioRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,11 +35,22 @@ public class ComercioService {
         return repositorio.listar();
     }
 
+    /** Listado paginado con filtro opcional por estado; se resuelve en la BD. */
+    public Pagina<Comercio> listar(EstadoAfiliacion estado, int pagina, int tamanio) {
+        return repositorio.listar(estado, pagina, tamanio);
+    }
+
     public Comercio obtener(UUID id) {
         return repositorio.buscarPorId(id)
                 .orElseThrow(() -> new ComercioNoEncontradoException("Comercio no encontrado: " + id));
     }
 
+    /**
+     * Cambio de estado dentro de una transacción: la lectura, la regla de
+     * negocio y la escritura ocurren de forma atómica y el bloqueo optimista
+     * (@Version) protege contra actualizaciones concurrentes.
+     */
+    @Transactional
     public Comercio cambiarEstado(UUID id, EstadoAfiliacion nuevoEstado) {
         Comercio comercio = obtener(id);
         comercio.cambiarEstado(nuevoEstado); // regla de negocio vive en el dominio
