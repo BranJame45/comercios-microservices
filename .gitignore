@@ -1,0 +1,20 @@
+# Java / build
+target/
+build/
+out/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Gradle
+.gradle/
+!.gradle/wrapper/gradle-wrapper.jar
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# Entorno y logs
+.env
+*.log
+.DS_Store
