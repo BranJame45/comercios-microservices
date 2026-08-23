@@ -16,6 +16,19 @@ Flujo principal: al aprobar un comercio, `comercios-service` publica el evento
 `ComercioAprobado` en RabbitMQ; `notificaciones-service` lo consume y guarda la
 notificación en su propia base de datos.
 
+## Demo en vivo (AWS EC2)
+
+Desplegado en AWS (imágenes en ECR ejecutándose en EC2 con Docker):
+
+- **Swagger (comercios-service):** <http://3.14.217.168:8080/swagger-ui/index.html>
+- **API notificaciones:** <http://3.14.217.168:8081/api/v1/notificaciones>
+
+**Credenciales de prueba:** usuario `admin` · contraseña `Admin2026!`
+
+Para probarlo: en Swagger usa `POST /api/v1/auth/login` con esas credenciales,
+copia el `accessToken`, púlsalo en **Authorize** y ya puedes consumir los
+endpoints protegidos. La base ya viene con comercios de ejemplo.
+
 ## Arquitectura
 
 ```
