@@ -27,7 +27,7 @@ jobs:
 
       - name: Compilar notificaciones-service (Gradle)
         working-directory: notificaciones-service
-        run: ./gradlew build -x test
+        run: bash ./gradlew build -x test
 
       - name: Análisis con SonarCloud
         uses: SonarSource/sonarqube-scan-action@v3
